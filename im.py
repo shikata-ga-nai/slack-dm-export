@@ -75,7 +75,6 @@ def private_groups_export():
 start_date = datetime.strptime(start, "%Y.%m.%d")
 end_date = datetime.strptime(end, "%Y.%m.%d")
 
-os.system('clear')
 print('========================================================================')
 print('[+] Start date: ' + str(start_date))
 print('[+] End date: ' + str(end_date))
