@@ -1,9 +1,23 @@
 from slacker import Slacker
 from datetime import timedelta, datetime
 from time import mktime
-import sys, os
+import os, argparse
 
-slack = Slacker('API_KEY_GOES_HERE')
+slack = Slacker('YOUR_API_KEY_GOES_HERE')
+
+parser = argparse.ArgumentParser(description='Slack direct messages, private groups and general channel export')
+parser.add_argument('-g', '--groups', action='store_true', default=False, help='Export private groups',
+                    dest='groups_flag')
+parser.add_argument('-s', '--start', action='store',
+                    default='2015.07.01', help="Start date", dest='start_date')
+parser.add_argument('-e', '--end', action='store',
+                    default='2015.08.01', help='End date', dest='end_date')
+results = parser.parse_args()
+
+start = results.start_date
+end = results.end_date
+groups_flag = results.groups_flag
+
 
 def daterangetimestamp(start_range_date, end_range_date):
     for n in range(int((end_range_date - start_range_date).days)):
@@ -20,7 +34,7 @@ def dm_export():
             print('[+] ' + current_username)
             for single_date_timestamp in daterangetimestamp(start_date, end_date):
                 history = slack.im.history(im_list[i]['id'], count=1000, oldest=single_date_timestamp,
-                                          latest=single_date_timestamp+86400.0).body['messages']
+                                           latest=single_date_timestamp+86400.0).body['messages']
                 for item in history:
                     log_file.write("%s\n" % item)
             log_file.close()
@@ -49,7 +63,7 @@ def private_groups_export():
         print('[+] ' + current_group_name)
         for single_date_timestamp in daterangetimestamp(start_date, end_date):
             response = slack.groups.history(current_group_id, count=1000, oldest=single_date_timestamp,
-                                          latest=single_date_timestamp+86400.0)
+                                            latest=single_date_timestamp+86400.0)
             history = response.body['messages']
             for item in history:
                 log_file.write("%s\n" % item)
@@ -57,11 +71,6 @@ def private_groups_export():
         if os.stat(current_group_name+'.json').st_size == 0:
             os.remove(current_group_name+'.json')
 
-
-
-
-start = str(sys.argv[1])
-end = str(sys.argv[2])
 
 start_date = datetime.strptime(start, "%Y.%m.%d")
 end_date = datetime.strptime(end, "%Y.%m.%d")
@@ -78,9 +87,10 @@ print('========================================================================'
 print('[+] Starting #general channel export')
 general_export()
 print('[+] #general channel export finished')
-print('========================================================================')
-print('[+] Starting private groups export')
-private_groups_export()
-print('[+] Private groups export finished')
+if groups_flag:
+    print('========================================================================')
+    print('[+] Starting private groups export')
+    private_groups_export()
+    print('[+] Private groups export finished')
 print('[+] All tasks finished')
 print('========================================================================')
